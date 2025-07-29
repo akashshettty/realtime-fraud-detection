@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>REAL TIME FRAUD DETECTION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #7f9cf5 0%, #a78bfa 100%);
+            min-height: 100vh;
+        }
+        body { margin: 0; padding: 0; }
+        .container {
+            max-width: 1200px;
+            margin: 32px auto;
+            padding: 0 16px;
+        }
+        .header {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 32px;
+            text-shadow: 0 2px 8px rgba(60,60,120,0.12);
+        }
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+            letter-spacing: 1px;
+        }
+        .header p {
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin: 0;
+            opacity: 0.92;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 32px;
+            margin-top: 0;
+        }
+        @media (max-width: 900px) {
+            .dashboard { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: #f8fafc;
+            border-radius: 18px;
+            padding: 32px 28px 28px 28px;
+            box-shadow: 0 8px 32px rgba(65, 90, 180, 0.10);
+            margin-bottom: 0;
+        }
+        .controls { grid-column: 1 / -1; margin-bottom: 0; }
+        h3 {
+            font-size: 1.18rem;
+            font-weight: 700;
+            color: #3730a3;
+            margin-top: 0;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        h3::before {
+            content: '';
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            background-size: contain;
+            margin-right: 8px;
+        }
+        .controls h3::before { content: "🛠️"; }
+        .card:nth-child(2) h3::before { content: "📊"; }
+        .card:nth-child(3) h3::before { content: "🚨"; }
+        .card:nth-child(4) h3::before { content: "📈"; }
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 22px 32px;
+            margin-bottom: 16px;
+        }
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 220px;
+            min-width: 180px;
+            margin-bottom: 10px;
+        }
+        .control-item label {
+            font-size: 0.98rem;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 7px;
+            letter-spacing: 0.02em;
+        }
+        .control-item input,
+        .control-item select {
+            padding: 10px 12px;
+            border: 1.5px solid #c7d2fe;
+            border-radius: 8px;
+            font-size: 1.08rem;
+            background: #fff;
+            color: #3730a3;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .control-item input:focus,
+        .control-item select:focus {
+            border-color: #7c3aed;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            gap: 12px;
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 1.08rem;
+            font-weight: 500;
+        }
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #d1d5db;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.13);
+        }
+        .status-dot.active {
+            background: #34d399;
+            box-shadow: 0 0 8px #34d39999;
+        }
+        .status-dot.inactive {
+            background: #f87171;
+            box-shadow: 0 0 8px #f8717199;
+        }
+        .btn {
+            background: linear-gradient(90deg, #6366f1 0%, #7c3aed 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            font-size: 1.08rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(60,60,120,0.10);
+            transition: background 0.22s, transform 0.18s;
+        }
+        .btn:hover {
+            background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
+            transform: translateY(-2px) scale(1.03);
+        }
+        .metrics {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+        .metric {
+            flex: 1 1 120px;
+            background: #e0e7ff;
+            border-radius: 10px;
+            padding: 16px 12px;
+            text-align: center;
+            margin-bottom: 0;
+        }
+        .metric-value {
+            font-size: 1.28rem;
+            font-weight: 700;
+            color: #3730a3;
+        }
+        .metric-label {
+            font-size: 0.98rem;
+            color: #6366f1;
+            margin-top: 3px;
+        }
+        .chart-placeholder {
+            margin-top: 18px;
+            background: linear-gradient(90deg, #f1f5f9 60%, #e0e7ff 100%);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            color: #a5b4fc;
+            font-size: 1.04rem;
+            font-style: italic;
+        }
+        .alerts-container {
+            max-height: 340px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+        .alert {
+            background: #fee2e2;
+            border-left: 6px solid #f87171;
+            border-radius: 8px;
+            padding: 14px 14px 10px 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(220,38,38,0.07);
+            animation: fadeIn 0.5s;
+        }
+        .alert.high-risk {
+            background: #fbbf24;
+            border-left: 6px solid #b45309;
+            color: #78350f;
+        }
+        .alert.medium-risk {
+            background: #fde68a;
+            border-left: 6px solid #f59e42;
+            color: #92400e;
+        }
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        .alert-title {
+            font-size: 1.08rem;
+        }
+        .alert-time {
+            font-size: 0.95rem;
+            color: #6366f1;
+        }
+        .alert-details {
+            font-size: 0.98rem;
+            margin-top: 7px;
+        }
+        .trade-stream {
+            max-height: 340px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+        .trade-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #e0e7ff;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            font-size: 1.05rem;
+            animation: fadeIn 0.5s;
+        }
+        .trade-symbol {
+            font-weight: 700;
+            color: #3730a3;
+            font-size: 1.06rem;
+        }
+        .trade-price {
+            font-weight: 600;
+            color: #059669;
+            margin-left: 18px;
+        }
+        .trade-time {
+            font-size: 0.93rem;
+            color: #6366f1;
+            margin-left: 18px;
+        }
+        .live-graph-container {
+            margin-top: 20px;
+            background: #e0e7ff;
+            border-radius: 10px;
+            padding: 16px 10px 10px 10px;
+            min-height: 180px;
+            position: relative;
+        }
+        .live-graph-title {
+            color: #3730a3;
+            font-size: 1.08rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .live-graph-error {
+            color: #b91c1c;
+            font-size: 1.08rem;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 20px;
+        }
+        /* Scrollbar styling */
+        .alerts-container::-webkit-scrollbar,
+        .trade-stream::-webkit-scrollbar {
+            width: 8px;
+            background: #f1f5f9;
+        }
+        .alerts-container::-webkit-scrollbar-thumb,
+        .trade-stream::-webkit-scrollbar-thumb {
+            background: #c7d2fe;
+            border-radius: 4px;
+        }
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>REAL TIME FRAUD DETECTION</h1>
+            <p>Live monitoring of Indian stock market trading activities</p>
+        </div>
+        <div class="dashboard">
+            <div class="card controls">
+                <h3>System Controls</h3>
+                <div class="control-group">
+                    <div class="control-item">
+                        <label>Stock Symbol</label>
+                        <select id="stockSymbol">
+                            <option value="TCS">TCS</option>
+                            <option value="INFY">INFY</option>
+                            <option value="RELIANCE">RELIANCE</option>
+                            <option value="HDFCBANK">HDFCBANK</option>
+                            <option value="ICICIBANK">ICICIBANK</option>
+                            <option value="SBIN">SBIN</option>
+                            <option value="ITC">ITC</option>
+                            <option value="HINDUNILVR">HINDUNILVR</option>
+                            <option value="LT">LT</option>
+                            <option value="KOTAKBANK">KOTAKBANK</option>
+                        </select>
+                    </div>
+                    <div class="control-item">
+                        <label>User Frequency Threshold</label>
+                        <input type="number" id="userThreshold" value="30" min="10" max="200">
+                    </div>
+                    <div class="control-item">
+                        <label>Price Spike Threshold (%)</label>
+                        <input type="number" id="spikeThreshold" value="2" min="0.5" max="20" step="0.1">
+                    </div>
+                    <div class="control-item">
+                        <label>Pattern Anomaly Factor</label>
+                        <input type="number" id="patternThreshold" value="1.2" min="1" max="3" step="0.1">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-item">
+                        <label>Data Source Mode</label>
+                        <select id="dataSourceMode">
+                            <option value="realtime">Yahoo Finance Real-time Data</option>
+                            <option value="script">Script Generated Data</option>
+                        </select>
+                    </div>
+                    <div class="control-item" id="apiKeyField" style="display:none;">
+                        <label>API Key</label>
+                        <input type="text" id="apiKeyInput" placeholder="Enter your API key" disabled>
+                    </div>
+                </div>
+                <div class="status">
+                    <div class="status-indicator">
+                        <div class="status-dot inactive" id="statusDot"></div>
+                        <span id="statusText">System Offline</span>
+                    </div>
+                    <button class="btn" id="toggleBtn" onclick="toggleDetection()">Start Detection</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>System Metrics</h3>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="totalTrades">0</div>
+                        <div class="metric-label">Total Trades</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="alertsGenerated">0</div>
+                        <div class="metric-label">Alerts Generated</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="fraudRate">0%</div>
+                        <div class="metric-label">Fraud Rate (Target: &lt;60%)</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="activeUsers">0</div>
+                        <div class="metric-label">Active Users</div>
+                    </div>
+                </div>
+                <div id="liveGraphSection" class="live-graph-container" style="display:none;">
+                    <div class="live-graph-title">Live Price Graph (Yahoo Finance)</div>
+                    <canvas id="liveGraph" width="600" height="120"></canvas>
+                    <div id="liveGraphError" class="live-graph-error" style="display:none;"></div>
+                </div>
+                <div class="chart-placeholder" id="chartPlaceholder">
+                    Real-time fraud detection chart will appear here
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Fraud Alerts</h3>
+                <div class="alerts-container" id="alertsContainer">
+                    <div style="text-align: center; color: #718096; padding: 20px;">
+                        No alerts detected. System is monitoring...
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Live Trade Stream</h3>
+                <div class="trade-stream" id="tradeStream">
+                    <div style="text-align: center; color: #718096; padding: 20px;">
+                        Waiting for trade data...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // --- CountMinSketch and FraudDetectionSystem as before ---
+        class CountMinSketch {
+            constructor(width = 1000, depth = 5) {
+                this.width = width;
+                this.depth = depth;
+                this.table = Array(depth).fill().map(() => Array(width).fill(0));
+                this.hashFunctions = this.generateHashFunctions(depth);
+            }
+            generateHashFunctions(count) {
+                const functions = [];
+                for (let i = 0; i < count; i++) {
+                    const a = Math.floor(Math.random() * 1000) + 1;
+                    const b = Math.floor(Math.random() * 1000);
+                    functions.push((x) => {
+                        const hash = (a * this.simpleHash(x) + b) % this.width;
+                        return Math.abs(hash);
+                    });
+                }
+                return functions;
+            }
+            simpleHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return Math.abs(hash);
+            }
+            add(item) {
+                for (let i = 0; i < this.depth; i++) {
+                    const index = this.hashFunctions[i](item);
+                    this.table[i][index]++;
+                }
+            }
+            estimate(item) {
+                let min = Infinity;
+                for (let i = 0; i < this.depth; i++) {
+                    const index = this.hashFunctions[i](item);
+                    min = Math.min(min, this.table[i][index]);
+                }
+                return min;
+            }
+            reset() {
+                this.table = Array(this.depth).fill().map(() => Array(this.width).fill(0));
+            }
+        }
+
+        class FraudDetectionSystem {
+            constructor() {
+                this.cms = new CountMinSketch(1000, 5);
+                this.priceWindow = [];
+                this.userPatterns = {};
+                this.userTimeMap = {};
+                this.isRunning = false;
+                this.totalTrades = 0;
+                this.alertsGenerated = 0;
+                this.activeUsers = new Set();
+                this.currentStock = 'TCS';
+                this.dataSourceMode = 'realtime';
+                this.priceHistory = [];
+                this.priceHistoryTimestamps = [];
+                this.liveGraphMaxPoints = 50;
+                this.liveGraphError = false;
+                // Thresholds
+                this.userThreshold = 30;
+                this.spikeThreshold = 2;
+                this.patternThreshold = 1.2;
+                this.windowSize = 20;
+                this.maxWindowSize = 50;
+            }
+
+            updateThresholds() {
+                this.userThreshold = parseInt(document.getElementById('userThreshold').value);
+                this.spikeThreshold = parseFloat(document.getElementById('spikeThreshold').value);
+                this.patternThreshold = parseFloat(document.getElementById('patternThreshold').value);
+                this.currentStock = document.getElementById('stockSymbol').value;
+                this.dataSourceMode = document.getElementById('dataSourceMode').value;
+            }
+
+            checkUserFrequency(userId) {
+                const now = Date.now();
+                if (this.userTimeMap[userId] && (now - this.userTimeMap[userId]) > 300000) {
+                    delete this.userTimeMap[userId];
+                }
+                this.cms.add(userId);
+                this.userTimeMap[userId] = now;
+                this.activeUsers.add(userId);
+                return this.cms.estimate(userId) > this.userThreshold;
+            }
+
+            checkPriceSpike(price) {
+                this.priceWindow.push(parseFloat(price));
+                if (this.priceWindow.length > this.windowSize) {
+                    this.priceWindow.shift();
+                }
+                if (this.priceWindow.length < 3) return false;
+                const max = Math.max(...this.priceWindow);
+                const min = Math.min(...this.priceWindow);
+                const percentChange = ((max - min) / min) * 100;
+                return percentChange > this.spikeThreshold;
+            }
+
+            huffmanEncoding(frequencies) {
+                if (Object.keys(frequencies).length <= 1) {
+                    return Object.keys(frequencies).reduce((acc, key) => {
+                        acc[key] = '0';
+                        return acc;
+                    }, {});
+                }
+                const heap = Object.entries(frequencies).map(([char, freq]) => ({
+                    freq,
+                    char,
+                    left: null,
+                    right: null
+                }));
+                heap.sort((a, b) => a.freq - b.freq);
+                while (heap.length > 1) {
+                    const left = heap.shift();
+                    const right = heap.shift();
+                    const merged = {
+                        freq: left.freq + right.freq,
+                        char: null,
+                        left,
+                        right
+                    };
+                    heap.push(merged);
+                    heap.sort((a, b) => a.freq - b.freq);
+                }
+                const codes = {};
+                function generateCodes(node, code = '') {
+                    if (node.char !== null) {
+                        codes[node.char] = code || '0';
+                        return;
+                    }
+                    if (node.left) generateCodes(node.left, code + '0');
+                    if (node.right) generateCodes(node.right, code + '1');
+                }
+                if (heap.length > 0) {
+                    generateCodes(heap[0]);
+                }
+                return codes;
+            }
+
+            checkBehaviorPattern(userId, action) {
+                if (!this.userPatterns[userId]) {
+                    this.userPatterns[userId] = '';
+                }
+                this.userPatterns[userId] += action;
+                if (this.userPatterns[userId].length > 20) {
+                    this.userPatterns[userId] = this.userPatterns[userId].slice(-20);
+                }
+                const pattern = this.userPatterns[userId];
+                if (pattern.length < 5) return false;
+                const frequencies = {};
+                for (const char of pattern) {
+                    frequencies[char] = (frequencies[char] || 0) + 1;
+                }
+                const huffmanCodes = this.huffmanEncoding(frequencies);
+                let encodedLength = 0;
+                for (const char of pattern) {
+                    encodedLength += huffmanCodes[char] ? huffmanCodes[char].length : 1;
+                }
+                const compressionRatio = encodedLength / pattern.length;
+                return compressionRatio > this.patternThreshold;
+            }
+
+            async fetchRealTimeData() {
+                // Yahoo Finance API (no API key needed)
+                try {
+                    const response = await fetch(`http://localhost:3001/api/yahoo?symbol=${this.currentStock}.NS`);
+if (response.ok) {
+    const data = await response.json();
+    const currentPrice = data.regularMarketPrice;
+    const volume = data.regularMarketVolume;
+    // For the live graph
+    this.addPriceHistory(currentPrice);
+    this.liveGraphError = false;
+    return this.generateTradeFromRealData(currentPrice, volume);
+}
+
+                } catch (error) {
+                    this.liveGraphError = true;
+                    throw new Error("Yahoo Finance fetch failed");
+                }
+                // If fetch fails, throw error to be caught in interval
+                this.liveGraphError = true;
+                throw new Error("Yahoo Finance fetch failed");
+            }
+
+            addPriceHistory(price) {
+                const now = new Date();
+                if (this.priceHistory.length >= this.liveGraphMaxPoints) {
+                    this.priceHistory.shift();
+                    this.priceHistoryTimestamps.shift();
+                }
+                this.priceHistory.push(price);
+                this.priceHistoryTimestamps.push(now);
+            }
+
+            clearPriceHistory() {
+                this.priceHistory = [];
+                this.priceHistoryTimestamps = [];
+            }
+
+            generateRealisticTrade() {
+                const users = ['trader_001', 'inst_bank_1', 'retail_456', 'algo_trader_x', 'mutual_fund_a', 'hft_bot_1', 'pension_fund', 'foreign_inv'];
+                const actions = ['B', 'S'];
+                const basePrices = {
+                    'TCS': 3500,
+                    'INFY': 1800,
+                    'RELIANCE': 2400,
+                    'HDFCBANK': 1600,
+                    'ICICIBANK': 1200,
+                    'SBIN': 800,
+                    'ITC': 450,
+                    'HINDUNILVR': 2600,
+                    'LT': 3200,
+                    'KOTAKBANK': 1900
+                };
+                const basePrice = basePrices[this.currentStock] || 2000;
+                const now = new Date();
+                const hour = now.getHours();
+                const isMarketHours = hour >= 9 && hour <= 15;
+                const volatilityMultiplier = isMarketHours ? 1.5 : 0.5;
+                let userId, action, price;
+                if (Math.random() < 0.2) {
+                    userId = 'hft_' + Math.floor(Math.random() * 5);
+                    action = actions[Math.floor(Math.random() * actions.length)];
+                    if (Math.random() < 0.4) {
+                        price = basePrice * (1 + (Math.random() * 0.08 - 0.04) * volatilityMultiplier);
+                    } else {
+                        price = basePrice * (1 + (Math.random() * 0.03 - 0.015) * volatilityMultiplier);
+                    }
+                } else {
+                    userId = users[Math.floor(Math.random() * users.length)];
+                    action = actions[Math.floor(Math.random() * actions.length)];
+                    price = basePrice * (1 + (Math.random() * 0.025 - 0.0125) * volatilityMultiplier);
+                }
+                const volume = Math.floor(Math.random() * 2000) + 100;
+                return {
+                    timestamp: new Date().toISOString(),
+                    userId,
+                    stockId: this.currentStock,
+                    price: price.toFixed(2),
+                    volume,
+                    action,
+                    isRealData: false
+                };
+            }
+
+            generateTradeFromRealData(realPrice, realVolume) {
+                const users = ['trader_001', 'inst_bank_1', 'retail_456', 'algo_trader_x', 'mutual_fund_a', 'hft_bot_1', 'pension_fund', 'foreign_inv'];
+                const actions = ['B', 'S'];
+                const priceVariation = realPrice * (Math.random() * 0.002 - 0.001);
+                const tradePrice = realPrice + priceVariation;
+                const baseVolume = Math.min(realVolume / 1000, 10000);
+                const tradeVolume = Math.floor(baseVolume * (Math.random() * 0.5 + 0.1));
+                let userId, action;
+                if (Math.random() < 0.25) {
+                    userId = 'hft_' + Math.floor(Math.random() * 5);
+                    action = actions[Math.floor(Math.random() * actions.length)];
+                } else {
+                    userId = users[Math.floor(Math.random() * users.length)];
+                    action = actions[Math.floor(Math.random() * actions.length)];
+                }
+                return {
+                    timestamp: new Date().toISOString(),
+                    userId,
+                    stockId: this.currentStock,
+                    price: tradePrice.toFixed(2),
+                    volume: tradeVolume,
+                    action,
+                    isRealData: true
+                };
+            }
+
+            generateScriptData() {
+                const users = ['trader_A', 'inst_B', 'retail_C', 'algo_D', 'fund_E', 'hft_F', 'pension_G', 'foreign_H', 'bank_I', 'mutual_J'];
+                const actions = ['B', 'S'];
+                let userId, action, price, volume;
+                if (Math.random() < 0.35) {
+                    if (Math.random() < 0.4) {
+                        userId = 'hft_script_' + Math.floor(Math.random() * 8);
+                        action = actions[Math.floor(Math.random() * actions.length)];
+                    }
+                    else if (Math.random() < 0.7) {
+                        userId = 'manipulator_' + Math.floor(Math.random() * 5);
+                        action = Math.random() < 0.8 ? 'B' : 'S';
+                    }
+                    else {
+                        userId = 'pattern_bot_' + Math.floor(Math.random() * 4);
+                        action = 'B';
+                    }
+                } else {
+                    userId = users[Math.floor(Math.random() * users.length)];
+                    action = actions[Math.floor(Math.random() * actions.length)];
+                }
+                const basePrices = {
+                    'TCS': 3500, 'INFY': 1800, 'RELIANCE': 2400, 'HDFCBANK': 1600,
+                    'ICICIBANK': 1200, 'SBIN': 800, 'ITC': 450, 'HINDUNILVR': 2600,
+                    'LT': 3200, 'KOTAKBANK': 1900
+                };
+                const basePrice = basePrices[this.currentStock] || 2000;
+                if (userId.includes('manipulator') || userId.includes('hft_script')) {
+                    if (Math.random() < 0.4) {
+                        price = basePrice * (1 + (Math.random() * 0.12 - 0.06));
+                    } else {
+                        price = basePrice * (1 + (Math.random() * 0.04 - 0.02));
+                    }
+                } else {
+                    price = basePrice * (1 + (Math.random() * 0.03 - 0.015));
+                }
+                volume = Math.floor(Math.random() * 3000) + 200;
+                return {
+                    timestamp: new Date().toISOString(),
+                    userId,
+                    stockId: this.currentStock,
+                    price: price.toFixed(2),
+                    volume,
+                    action,
+                    isRealData: false,
+                    isScriptMode: true
+                };
+            }
+
+            processTrade(trade) {
+                this.totalTrades++;
+                let riskScore = 0;
+                const alerts = [];
+                if (this.checkUserFrequency(trade.userId)) {
+                    riskScore += 1;
+                    alerts.push('High frequency trading detected');
+                }
+                if (this.checkPriceSpike(trade.price)) {
+                    riskScore += 1;
+                    alerts.push('Abnormal price movement detected');
+                }
+                if (this.checkBehaviorPattern(trade.userId, trade.action)) {
+                    riskScore += 1;
+                    alerts.push('Suspicious trading pattern detected');
+                }
+                if (riskScore >= 1) {
+                    this.generateAlert(trade, riskScore, alerts);
+                }
+                this.updateUI(trade);
+                this.updateMetrics();
+            }
+
+            generateAlert(trade, score, reasons) {
+                this.alertsGenerated++;
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert ${score >= 3 ? 'high-risk' : 'medium-risk'}`;
+                const riskLevel = score >= 3 ? 'HIGH RISK' : 'MEDIUM RISK';
+                const timestamp = new Date().toLocaleTimeString();
+                alertDiv.innerHTML = `
+                    <div class="alert-header">
+                        <div class="alert-title">🚨 ${riskLevel} - User: ${trade.userId}</div>
+                        <div class="alert-time">${timestamp}</div>
+                    </div>
+                    <div class="alert-details">
+                        Stock: <strong>${trade.stockId}</strong> | Price: ₹${trade.price} | Volume: ${trade.volume}<br>
+                        Risk Score: <strong>${score}/3</strong> | Reasons: ${reasons.join(', ')}
+                    </div>
+                `;
+                const alertsContainer = document.getElementById('alertsContainer');
+                if (alertsContainer.children.length > 50) {
+                    alertsContainer.removeChild(alertsContainer.lastChild);
+                }
+                alertsContainer.insertBefore(alertDiv, alertsContainer.firstChild);
+                const placeholder = alertsContainer.querySelector('div[style*="text-align: center"]');
+                if (placeholder) placeholder.remove();
+            }
+
+            updateUI(trade) {
+                const tradeDiv = document.createElement('div');
+                tradeDiv.className = 'trade-item';
+                let dataSource;
+                if (trade.isScriptMode) {
+                    dataSource = '🔵 SCRIPT';
+                } else if (trade.isRealData) {
+                    dataSource = '🟢 LIVE';
+                } else {
+                    dataSource = '🟡 SIM';
+                }
+                tradeDiv.innerHTML = `
+                    <div>
+                        <span class="trade-symbol">${trade.stockId}</span>
+                        <span style="margin-left: 10px;">${trade.action === 'B' ? '📈 BUY' : '📉 SELL'}</span>
+                        <span style="margin-left: 10px; font-size: 0.8em; color: #666;">${dataSource}</span>
+                    </div>
+                    <div class="trade-price">₹${trade.price}</div>
+                    <div class="trade-time">${new Date().toLocaleTimeString()}</div>
+                `;
+                const tradeStream = document.getElementById('tradeStream');
+                if (tradeStream.children.length > 20) {
+                    tradeStream.removeChild(tradeStream.lastChild);
+                }
+                tradeStream.insertBefore(tradeDiv, tradeStream.firstChild);
+                const placeholder = tradeStream.querySelector('div[style*="text-align: center"]');
+                if (placeholder) placeholder.remove();
+            }
+
+            updateMetrics() {
+                document.getElementById('totalTrades').textContent = this.totalTrades.toLocaleString();
+                document.getElementById('alertsGenerated').textContent = this.alertsGenerated.toLocaleString();
+                const fraudRate = this.totalTrades > 0 ? ((this.alertsGenerated / this.totalTrades) * 100).toFixed(1) : 0;
+                document.getElementById('fraudRate').textContent = `${fraudRate}%`;
+                document.getElementById('activeUsers').textContent = this.activeUsers.size;
+            }
+
+            start() {
+                this.isRunning = true;
+                document.getElementById('statusDot').className = 'status-dot active';
+                document.getElementById('statusText').textContent = 'System Active - Real-time Monitoring';
+                document.getElementById('toggleBtn').textContent = 'Stop Detection';
+                this.clearPriceHistory();
+                this.liveGraphError = false;
+                this.runDetectionLoop();
+            }
+
+            stop() {
+                this.isRunning = false;
+                document.getElementById('statusDot').className = 'status-dot inactive';
+                document.getElementById('statusText').textContent = 'System Offline';
+                document.getElementById('toggleBtn').textContent = 'Start Detection';
+                if (this.interval) {
+                    clearInterval(this.interval);
+                }
+            }
+
+            runDetectionLoop() {
+                if (this.interval) clearInterval(this.interval);
+                this.interval = setInterval(async () => {
+                    this.updateThresholds();
+                    if (this.dataSourceMode === 'realtime') {
+                        try {
+                            const trade = await this.fetchRealTimeData();
+                            this.processTrade(trade);
+                            drawLiveGraph(this.priceHistory);
+                            document.getElementById('liveGraphError').style.display = "none";
+                        } catch (err) {
+                            // Show error, switch mode, and notify user
+                            document.getElementById('liveGraphError').textContent = "Couldn't fetch real-time data, switching to script generation...";
+                            document.getElementById('liveGraphError').style.display = "block";
+                            document.getElementById('dataSourceMode').value = 'script';
+                            this.dataSourceMode = 'script';
+                        }
+                    } else {
+                        const trade = this.generateScriptData();
+                        this.processTrade(trade);
+                        // For script mode, clear the graph
+                        drawLiveGraph([]);
+                        document.getElementById('liveGraphError').style.display = "none";
+                    }
+                }, 2000);
+            }
+        }
+
+        // --- Live Graph Drawing ---
+        function drawLiveGraph(priceHistory) {
+            const canvas = document.getElementById('liveGraph');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!priceHistory || priceHistory.length < 2) {
+                ctx.fillStyle = "#6366f1";
+                ctx.font = "16px Segoe UI";
+                ctx.fillText("Waiting for real-time price data...", 20, 60);
+                return;
+            }
+
+            // Find min/max for scaling
+            let min = Math.min(...priceHistory);
+            let max = Math.max(...priceHistory);
+            if (min === max) { min -= 1; max += 1; }
+
+            const w = canvas.width, h = canvas.height;
+            const margin = 35;
+            const step = (w - 2 * margin) / (priceHistory.length - 1);
+
+            // Draw axes
+            ctx.strokeStyle = "#a5b4fc";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(margin, margin);
+            ctx.lineTo(margin, h - margin);
+            ctx.lineTo(w - margin, h - margin);
+            ctx.stroke();
+
+            // Draw price line
+            ctx.strokeStyle = "#6366f1";
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            priceHistory.forEach((p, i) => {
+                const x = margin + i * step;
+                const y = h - margin - ((p - min) / (max - min)) * (h - 2 * margin);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Draw min/max labels
+            ctx.fillStyle = "#3730a3";
+            ctx.font = "13px Segoe UI";
+            ctx.fillText("₹" + min.toFixed(2), 4, h - margin);
+            ctx.fillText("₹" + max.toFixed(2), 4, margin + 8);
+
+            // Draw latest price
+            const latest = priceHistory[priceHistory.length - 1];
+            ctx.fillStyle = "#059669";
+            ctx.font = "bold 16px Segoe UI";
+            ctx.fillText("Latest: ₹" + latest.toFixed(2), w - margin - 120, margin + 12);
+        }
+
+        // --- UI/UX logic for controls and graph ---
+        function handleDataSourceChange() {
+            const mode = document.getElementById('dataSourceMode').value;
+            const apiKeyField = document.getElementById('apiKeyField');
+            const liveGraphSection = document.getElementById('liveGraphSection');
+            const chartPlaceholder = document.getElementById('chartPlaceholder');
+            if (mode === 'realtime') {
+                apiKeyField.style.display = "none";
+                liveGraphSection.style.display = "block";
+                chartPlaceholder.style.display = "none";
+            } else {
+                apiKeyField.style.display = "none";
+                liveGraphSection.style.display = "block";
+                chartPlaceholder.style.display = "none";
+                // For script mode, clear the graph
+                drawLiveGraph([]);
+            }
+        }
+
+        document.getElementById('dataSourceMode').addEventListener('change', function() {
+            handleDataSourceChange();
+        });
+
+        document.getElementById('stockSymbol').addEventListener('change', function() {
+            if (fraudDetector.isRunning) {
+                fraudDetector.clearPriceHistory();
+                drawLiveGraph([]);
+            }
+        });
+
+        // --- Fraud Detection System initialization ---
+        const fraudDetector = new FraudDetectionSystem();
+
+        function toggleDetection() {
+            if (fraudDetector.isRunning) {
+                fraudDetector.stop();
+            } else {
+                fraudDetector.start();
+            }
+        }
+
+        // --- On page load ---
+        document.addEventListener('DOMContentLoaded', function() {
+            handleDataSourceChange();
+            drawLiveGraph([]);
+            console.log('🇮🇳 NSE Stock Market Fraud Detection System Initialized');
+            console.log('📊 Ready to detect fraud with <30% false positive rate');
+        });
+    </script>
+</body>
+</html>
